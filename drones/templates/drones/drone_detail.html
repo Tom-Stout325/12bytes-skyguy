@@ -1,0 +1,55 @@
+{% extends 'index.html' %}
+{% load drone_extras %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">{{ drone.nickname|default:"Unnamed Drone" }}</h4>
+    </div>
+    <div class="card-body">
+      <p><strong>Model:</strong> {{ drone.model }}</p>
+      <p><strong>Serial Number:</strong> {{ drone.serial_number }}</p>
+      <p><strong>FAA Number:</strong> {{ drone.faa_number }}</p>
+      <p><strong>FAA Expiration:</strong> {{ drone.faa_experiation|date:"M d, Y" }}</p>
+      <p><strong>Date Purchased:</strong> {{ drone.date_purchased|date:"M d, Y" }}</p>
+      <p>
+        <strong>FAA Certificate:</strong>
+        {% if drone.faa_certificate %}
+          <a href="{{ drone.faa_certificate.url }}" target="_blank" class="text-decoration-none">
+            <i class="fa-solid fa-file-lines"></i> View Certificate
+          </a>
+        {% else %}
+          —
+        {% endif %}
+      </p>
+      <hr>
+      <p><strong>Number of Flights:</strong> {{ flight_count }}</p>
+      <p><strong>Total Flight Time:</strong> {{ total_time|duration_display }}</p>
+    </div>
+    
+    <div class="card-footer d-flex flex-wrap justify-content-center justify-content-md-between gap-2">
+      <a href="{% url 'drone_edit' drone.pk %}" class="btn btn-warning btn-sm" data-bs-toggle="tooltip" title="Edit">
+        <i class="fa-solid fa-pen-to-square"></i>
+        <span class="d-none d-md-inline"> Edit</span>
+      </a>
+      <a href="{% url 'drone_delete' drone.pk %}" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" title="Delete">
+        <i class="fa-solid fa-trash"></i>
+        <span class="d-none d-md-inline"> Delete</span>
+      </a>
+      <a href="{% url 'drone_list' %}" class="btn btn-secondary btn-sm" data-bs-toggle="tooltip" title="Back to List">
+        <i class="fa-solid fa-list"></i>
+        <span class="d-none d-md-inline"> Back to List</span>
+      </a>
+      <a href="{% url 'drone_detail_pdf' drone.pk %}" class="btn btn-outline-primary btn-sm" data-bs-toggle="tooltip" title="Export PDF">
+        <i class="fa-solid fa-file-pdf"></i>
+        <span class="d-none d-md-inline"> Export PDF</span>
+      </a>
+      <a href="{% url 'drone_detail_pdf' drone.pk %}?preview=1" target="_blank" class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="Preview PDF">
+        <i class="fa-solid fa-eye"></i>
+        <span class="d-none d-md-inline"> Preview PDF</span>
+      </a>
+    </div>
+    
+    
+{% endblock %}

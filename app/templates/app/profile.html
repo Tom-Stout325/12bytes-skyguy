@@ -1,0 +1,112 @@
+{% extends 'index.html' %}
+{% load time_filters %}
+
+{% block title %}Pilot Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h4 class="mb-0 text-white">Pilot Profile</h4>
+          <span class="badge bg-light text-dark">{{ profile.user.username }}</span>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Name:</strong>
+              <p>{{ profile.user.first_name }} {{ profile.user.last_name }}</p>
+            </div>
+            <div class="col-md-6">
+              <strong>Email:</strong>
+              <p>{{ profile.user.email }}</p>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <strong>Pilot License #:</strong>
+              <p>{{ profile.license_number }}</p>
+            </div>
+            <div class="col-md-6">
+              {% if profile.license_image %}
+                <strong>License Image:</strong><br>
+                <img src="{{ profile.license_image.url }}" class="img-thumbnail mt-1" style="max-width: 100%; max-height: 300px;">
+              {% else %}
+                <strong>License Image:</strong>
+                <p><em>No image uploaded.</em></p>
+              {% endif %}
+            </div>
+          </div>
+
+          <hr>
+          <div>
+            <h4 class="text-center">Flights</h4>
+          </div>
+          <div class="row text-center">
+            <div class="col-md-6">
+              <h5 class="text-success">This Year:</h5>
+              <h6><span class="text-success">{{ profile.flights_this_year }} Flights </span> |  <span class="text-success">{{ profile.flight_time_this_year|seconds_to_hms }}</span></h6>
+            </div>
+            <div class="col-md-6">
+              <h5 class="text-primary">Total:</h5>
+              <h6><span class="text-primary">{{ profile.flights_total }}  Flights</span>  |  <span class="text-primary">{{ profile.flight_time_total|seconds_to_hms }}</span></h6>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-5">
+  <h4 class="mb-3">Pilot Training Records</h4>
+
+  <form method="GET" class="row g-3 mb-3">
+    <div class="col-auto">
+      <select name="year" class="form-select" onchange="this.form.submit()">
+        <option value="">All Years</option>
+        {% for year in years %}
+          <option value="{{ year }}" {% if year|stringformat:"s" == request.GET.year %}selected{% endif %}>{{ year }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+
+  <a href="{% url 'training_create' %}" class="btn btn-primary btn-sm mb-3">Add Training</a>
+  <table class="table table-bordered">
+    <thead class="table-light">
+      <tr>
+        <th>Title</th>
+        <th>Date Completed</th>
+        <th>Required</th>
+        <th>Certificate</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in trainings %}
+      <tr>
+        <td>{{ t.title }}</td>
+        <td>{{ t.date_completed }}</td>
+        <td>{{ t.required|yesno:"Yes,No" }}</td>
+        <td>
+          {% if t.certificate %}
+            <a href="{{ t.certificate.url }}" target="_blank">View</a>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          <a href="{% url 'training_edit' t.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+          <a href="{% url 'training_delete' t.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-center">No training records found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

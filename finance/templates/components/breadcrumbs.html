@@ -1,0 +1,29 @@
+<nav aria-label="breadcrumb" class="mt-2">
+  <ol class="breadcrumb bg-light p-2 rounded shadow-sm mb-4">
+
+    <li class="breadcrumb-item">
+      <a href="{% url 'dashboard' %}">Dashboard</a>
+    </li>
+
+    {% if level1 %}
+      <li class="breadcrumb-item {% if not level2 %}active{% endif %}" {% if not level2 %}aria-current="page"{% endif %}>
+        {% if level1_url %}
+          <a href="{{ level1_url }}">{{ level1 }}</a>
+        {% else %}
+          {{ level1 }}
+        {% endif %}
+      </li>
+    {% endif %}
+
+    {% if level2 %}
+      <li class="breadcrumb-item active" aria-current="page">
+        {% if level2_url %}
+          <a href="{{ level2_url }}">{{ level2 }}</a>
+        {% else %}
+          {{ level2 }}
+        {% endif %}
+      </li>
+    {% endif %}
+
+  </ol>
+</nav>

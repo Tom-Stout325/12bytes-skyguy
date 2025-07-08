@@ -1,0 +1,84 @@
+{% extends 'index.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-5">
+  <a href="{% url 'invoice_list' %}" class = "btn btn-outline btn-primary mb-4">Back To Invoices</a>
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0">Create Invoice</h3>
+    </div>
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            {{ form.invoice_numb|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.client|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.event|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.location|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.service|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.amount|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.date|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.due|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.paid_date|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.status|as_crispy_field }}
+          </div>
+        </div>
+
+        <hr class="mt-4 mb-4">
+
+        <h5 class="mb-3">Invoice Items</h5>
+        {{ formset.management_form }}
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for form in formset %}
+              <tr>
+                <td>{{ form.item }}</td>
+                <td>{{ form.qty }}</td>
+                <td>{{ form.price }}</td>
+                <td class="text-center">{{ form.DELETE }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="text-end">
+          <button type="submit" class="btn btn-success">Save Invoice</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

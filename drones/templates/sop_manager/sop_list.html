@@ -1,0 +1,77 @@
+{% extends 'index.html' %}
+{% load static %}
+{% load sop_filters %} {# If you use file_icon or is_pdf from sop_filters #}
+
+{% block title %}Standard Operating Procedures{% endblock %}
+
+{% block breadcrumbs %}
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'drone_portal' %}">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">SOPs</li>
+    </ol>
+  </nav>
+{% endblock %}
+
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center mb-5">Standard Operating Procedures</h2>
+
+  <div class="text-end mb-4">
+    <a href="{% url 'sop_upload' %}" class="btn btn-primary">Upload New SOP</a>
+  </div>
+
+  <!-- SOP List -->
+  <ul class="list-group">
+    {% for sop in sops %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <strong>
+          {{ sop.file.url|file_icon|safe }} 
+          <a href="{{ sop.file.url }}" target="_blank">{{ sop.title }}</a>
+        </strong><br>
+        <small class="text-muted">Created: {{ sop.created_at|date:"M d, Y" }}</small><br>
+        {% if sop.description %}
+          <small class="text-muted">{{ sop.description }}</small>
+        {% endif %}
+      </div>
+      <div>
+        {% if sop.file.url|is_pdf %}
+          <a href="{{ sop.file.url }}" target="_blank" class="btn btn-sm btn-outline-info me-2">View</a>
+        {% endif %}
+        <a href="{{ sop.file.url }}" download class="btn btn-sm btn-success">Download</a>
+      </div>
+    </li>
+    {% empty %}
+    <li class="list-group-item text-muted">No SOPs available yet.</li>
+    {% endfor %}
+  </ul>
+  
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <nav aria-label="SOP pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+      </li>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+      </li>
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% load static %}
+{% load drone_extras %}
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Drone Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        .header {
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .logo {
+            height: 60px;
+        }
+        h1 {
+            font-size: 24px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            font-size: 18px;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 10px;
+            padding-bottom: 4px;
+        }
+        .field-label {
+            font-weight: bold;
+        }
+        .value {
+            margin-bottom: 5px;
+        }
+        .certificate-img {
+            max-width: 100%;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+       
+            <img src="{% static 'images/logo2.png' %}" class="logo" alt="Sky Guy Logo">
+
+    
+        <h1>Drone Report</h1>
+        <p>{{ drone.model }}</p>
+        <p><strong>Date Purchased:</strong> {{ drone.date_purchased|date:"F j, Y" }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Drone Details</h2>
+        <p class="value"><span class="field-label">Model:</span> {{ drone.model }}</p>
+        <p class="value"><span class="field-label">Nickname:</span> {{ drone.nickname }}</p>
+        <p class="value"><span class="field-label">Serial Number:</span> {{ drone.serial_number }}</p>
+        <p class="value"><span class="field-label">FAA Number:</span> {{ drone.faa_number }}</p>
+    </div>
+    <br>
+    <div class="section">
+        <h2>Flight Summary</h2>
+        <p class="value"><span class="field-label">Number of Flights:</span> {{ flight_count }}</p>
+        <p><strong>Total Flight Time:</strong> {{ total_time|duration_display }}</p>
+      </div>
+      
+<br>
+    <div class="section">
+        <h2>FAA Registration</h2>
+        <p class="value"><span class="field-label">Expiration:</span> {{ drone.faa_experiation|date:"F j, Y" }}</p>
+        <div class="value">
+            <span class="field-label">Certificate:</span><br>
+            {% if drone.faa_certificate %}
+                <img src="{{ drone.faa_certificate.url }}" alt="FAA Certificate" class="certificate-img">
+            {% else %}
+                <p>None uploaded</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

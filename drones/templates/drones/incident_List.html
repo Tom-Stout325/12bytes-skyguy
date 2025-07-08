@@ -1,0 +1,40 @@
+
+
+{% block content %}
+<div class="container mt-4">
+
+  <div>
+    <a href="{% url 'submit_incident_report' %}" class="btn btn-outline-primary mb-3">Submit New Incident Report</a>
+  </div>
+
+  <!-- Search form -->
+  <form method="get" class="row g-2 mb-4">
+    <div class="col-md-6">
+      <input type="text" name="q" class="form-control" placeholder="Search by name, location, or description..." value="{{ search_query }}">
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+  </form>
+
+  <!-- Report list -->
+  <ul class="list-group">
+    {% for report in incident_reports %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ report.reported_by }}</strong> — {{ report.report_date }}<br>
+          <small class="text-muted">{{ report.location }} | {{ report.event_date }} {{ report.event_time }}</small><br>
+          <small>{{ report.description|truncatechars:100 }}</small>
+        </div>
+        <a href="{% url 'incident_detail' report.id %}" class="btn btn-sm btn-outline-info">View</a>
+      </li>
+    {% empty %}
+      <li class="list-group-item text-muted">No incident reports found.</li>
+    {% endfor %}
+  </ul>
+
+  <p>Total Reports: {{ incident_reports|length }}</p>
+
+  
+</div>
+{% endblock %}

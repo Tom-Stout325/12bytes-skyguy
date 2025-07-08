@@ -1,0 +1,91 @@
+{% extends 'index.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block breadcrumbs %}
+  <h3>Finance Portal</h3>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'transactions' %}"></a>Transactions</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'invoice_list' %}">Invoices</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Invoice Edit</li>
+      <li class="breadcrumb-item"><a href="{% url 'mileage_log' %}">Mileage Log</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'category_page' %}">Categories</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'reports' %}">Financial Reports</a></li>
+    </ol>
+  </nav>
+{% endblock %}
+
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0">Edit Invoice</h3>
+    </div>
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <!-- Main Invoice Form -->
+        <div class="row">
+          <div class="col-md-6 mb-3">{{ form.invoice_numb|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.client|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.event|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.location|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.service|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.amount|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.date|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.due|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.paid_date|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.status|as_crispy_field }}</div>
+        </div>
+
+        <hr class="mt-4 mb-4">
+
+        <!-- Invoice Items Formset -->
+        <h5 class="mb-3">Invoice Items</h5>
+
+        {{ formset.management_form }}
+        {% if formset.non_form_errors %}
+          <div class="alert alert-danger">
+            {{ formset.non_form_errors }}
+          </div>
+        {% endif %}
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item_form in formset %}
+                {% for hidden in item_form.hidden_fields %}
+                  {{ hidden }}
+                {% endfor %}
+                <tr>
+                  <td>{{ item_form.item|as_crispy_field }}</td>
+                  <td>{{ item_form.qty|as_crispy_field }}</td>
+                  <td>{{ item_form.price|as_crispy_field }}</td>
+                  <td class="text-center">{{ item_form.DELETE }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="text-end mt-3">
+          <button type="submit" class="btn btn-success">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

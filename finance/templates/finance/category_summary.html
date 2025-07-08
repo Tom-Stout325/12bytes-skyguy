@@ -1,0 +1,68 @@
+{% extends 'index.html' %}
+{% load humanize %}
+
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-primary text-center mb-2">Income & Expense Summary</h2>
+    <h4 class="text-muted text-center mb-4">
+        Year: {{ selected_year|default:"All Years" }}
+    </h4>
+
+    <!-- Year Selection Form -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Year Filter</h5>
+        </div>
+        <div class="card-body bg-light">
+            <form method="get" class="row g-3 align-items-center justify-content-center">
+                <div class="col-auto">
+                    <label for="year" class="form-label fw-bold">Select Year:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="year" id="year" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Years</option>
+                        {% for year in available_years %}
+                        <option value="{{ year }}" {% if selected_year|slugify == year|slugify %}selected{% endif %}>
+                            {{ year }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="text-center mb-3">
+        <a href="{% url 'category_summary_pdf' %}?year={{ selected_year }}&preview=1" target="_blank" class="btn btn-outline-secondary me-2">
+            <i class="fa-solid fa-eye"></i> Preview PDF
+        </a>
+        <a href="{% url 'category_summary_pdf' %}?year={{ selected_year }}" class="btn btn-outline-danger">
+            <i class="fa-solid fa-file-pdf"></i> Download PDF
+        </a>
+    </div>
+    <!-- Shared Category Block -->
+    {% include "components/category_block.html" with title="Income Categories" data=income_category_totals total=income_category_total color="success" %}
+    {% include "components/category_block.html" with title="Income Sub-Categories" data=income_subcategory_totals total=income_subcategory_total color="success" %}
+    {% include "components/category_block.html" with title="Expense Categories" data=expense_category_totals total=expense_category_total color="warning" %}
+    {% include "components/category_block.html" with title="Expense Sub-Categories" data=expense_subcategory_totals total=expense_subcategory_total color="warning" %}
+
+    <!-- Final Totals -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-info text-white text-center">
+            <h4 class="mb-0">Year-End Summary</h4>
+        </div>
+        <div class="card-body">
+            <div class="row text-center text-md-end">
+                <div class="col-12 col-md-6 mb-3 mb-md-0">
+                    <h5><strong>Year:</strong> {{ selected_year }}</h5>
+                </div>
+                <div class="col-12 col-md-6">
+                    <p class="mb-1"><strong>Income:</strong> $ {{ income_category_total|floatformat:2|intcomma }}</p>
+                    <p class="mb-1"><strong>Expenses:</strong> $ {{ expense_category_total|floatformat:2|intcomma }}</p>
+                    <p class="mb-0"><strong>Net:</strong> $ {{ net_profit|floatformat:2|intcomma }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,194 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    @page { size: 8.5in 11in; margin: 1in; }
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      font-size: 12px;
+      color: #333;
+      margin: 0;
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #4682B4;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .header img { width: 140px; }
+
+    .header h2 { color: #4682B4; margin-top: 10px; font-size: 20px; }
+    .header h3 { font-size: 16px; margin: 5px 0; }
+
+    .section-title {
+      background-color: #4682B4;
+      color: white;
+      padding: 6px 12px;
+      margin-top: 30px;
+      font-size: 14px;
+    }
+
+    .details, .summary { margin-top: 10px; }
+    .details p, .summary p { margin: 2px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 11.5px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      text-align: left;
+    }
+
+    th { background-color: #f4f4f4; }
+
+    .summary {
+      margin-top: 20px;
+      border-top: 2px solid #ccc;
+      padding-top: 10px;
+    }
+
+    .summary p {
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .net-amount {
+      font-size: 13.5px;
+      color: #2E8B57;
+    }
+
+    .footer {
+      font-size: 10px;
+      text-align: center;
+      margin-top: 40px;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <img src="{% static 'images/logo2.png' %}" alt="Airborne Images Logo">
+    <h2>Invoice Summary</h2>
+    <h3>Invoice #: {{ invoice.invoice_numb }}</h3>
+  </div>
+
+  <div class="section-title">Invoice Information</div>
+  <div class="details">
+    <p><strong>Date:</strong> {{ invoice.date }}</p>
+    <p><strong>Client:</strong> {{ invoice.client }}</p>
+    <p><strong>Event:</strong> {{ invoice.event }}</p>
+    <p><strong>Service:</strong> {{ invoice.service }}</p>
+    <p><strong>Invoice Amount:</strong> ${{ invoice.amount|floatformat:2|intcomma }}</p>
+  </div>
+
+  <div class="section-title">Associated Transactions</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Category</th>
+        <th>Sub-Category</th>
+        <th>Amount</th>
+        <th>Deductible</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for transaction in transactions %}
+      <tr>
+        <td>{{ transaction.date }}</td>
+        <td>{{ transaction.category }}</td>
+        <td>{{ transaction.sub_cat }}</td>
+        <td>
+          ${{ transaction.amount|floatformat:2 }}
+          {% if transaction.sub_cat.id == 26 %}
+            <br><small>(50% deductible: ${{ transaction.deductible_amount|floatformat:2 }})</small>
+          {% endif %}
+        </td>
+        <td>
+          {% if transaction.sub_cat.id == 26 %}
+            50%
+          {% elif transaction.sub_cat.id == 27 and transaction.transport_type == 'personal_vehicle' %}
+            No
+          {% else %}
+            Yes
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if mileage_entries %}
+  <div class="section-title">Mileage Entries</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Total Miles</th>
+        <th>Rate</th>
+        <th>Mileage Value</th>
+        <th>Client</th>
+        <th>Invoice</th>
+        <th>Job</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for mileage in mileage_entries %}
+      <tr>
+        <td>{{ mileage.date }}</td>
+        <td>{{ mileage.total }}</td>
+        <td>${{ mileage_rate|floatformat:2 }}</td>
+        <td>${{ mileage.total|floatformat:1|floatformat:2|add:"0"|floatformat:2|intcomma }}</td>
+        <td>{{ mileage.client }}</td>
+        <td>{{ mileage.invoice }}</td>
+        <td>{{ mileage.job }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <div class="summary">
+    <table style="width:100%; margin-top: 10px;">
+      <tr>
+        <!-- Taxable Calculation Column -->
+        <td style="vertical-align: top; width: 50%; padding-right: 30px;">
+          <strong>Taxable Calculation</strong>
+          <p><strong>Invoice Amount:</strong> ${{ invoice_amount|floatformat:2|intcomma }}</p>
+          <p><strong>Taxable Expenses:</strong> -${{ deductible_expenses|floatformat:2|intcomma }}</p>
+          <p><strong>Mileage Deduction:</strong> -${{ mileage_dollars|floatformat:2|intcomma }}</p>
+          <p class="net-amount"><strong>Taxable Income:</strong> ${{ taxable_income|floatformat:2|intcomma }}</p>
+        </td>
+
+        <!-- Actual Calculation Column -->
+        <td style="vertical-align: top; width: 50%;">
+          <strong>Actual Calculation</strong>
+          <p><strong>Invoice Amount:</strong> ${{ invoice_amount|floatformat:2|intcomma }}</p>
+          <p><strong>Total Expenses (actual):</strong> -${{ total_expenses|floatformat:2|intcomma }}</p>
+          <p><strong>Net Income:</strong> ${{ net_income|floatformat:2|intcomma }}</p>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+
+  <div class="footer">
+    Generated by Airborne Images • {{ now|date:"F j, Y" }}
+  </div>
+
+</body>
+</html>

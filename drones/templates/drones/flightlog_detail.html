@@ -1,0 +1,84 @@
+{% extends 'index.html' %}
+{% load duration_filters %}
+
+{% block breadcrumbs %}
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'drone_portal' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'flightlog_list' %}">Flight Logs</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Flight Details</li>
+    </ol>
+  </nav>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Flight Details</h2>
+
+  <!-- Export Button -->
+  <div class="mb-3 text-end">
+    <a href="{% url 'flightlog_pdf' log.id %}" class="btn btn-outline-secondary" target="_blank">
+      <i class="fas fa-file-pdf"></i> Export to PDF
+    </a>
+  </div>
+
+  <!-- Date & Time -->
+  <div class="card mb-4">
+    <div class="card-header fw-bold">Date & Time</div>
+    <div class="card-body">
+      <p><strong>Date:</strong> {{ log.flight_date }}</p>
+      <p><strong>Takeoff Time:</strong> {{ log.landing_time|default:"—" }}</p>
+      <p><strong>Duration:</strong> {{ log.air_time|duration }}</p>
+    </div>
+  </div>
+
+  <!-- Locations -->
+  <div class="card mb-4">
+    <div class="card-header fw-bold">Location</div>
+    <div class="card-body">
+      <p><strong>Takeoff Address:</strong> {{ log.takeoff_address }}</p>
+      <p><strong>GPS Coordinates:</strong> {{ log.takeoff_latlong }}</p>
+    </div>
+  </div>
+
+  <!-- Flight Info -->
+  <div class="card mb-4">
+    <div class="card-header fw-bold">Flight Details</div>
+    <div class="card-body">
+      <p><strong>Drone:</strong> {{ log.drone_name }} ({{ log.drone_type }})</p>
+      <p><strong>Serial Number:</strong> {{ log.drone_serial }}</p>
+      <p><strong>Battery:</strong> {{ log.battery_name }}</p>
+      <p><strong>Photos Taken:</strong> {{ log.photos|default:"0" }}</p>
+      <p><strong>Videos Taken:</strong> {{ log.videos|default:"0" }}</p>
+      <p><strong>Max Altitude:</strong> {{ log.max_altitude_ft }} ft</p>
+      <p><strong>Max Speed:</strong> {{ log.max_speed_mph }} mph</p>
+      <p><strong>Total Distance:</strong> {{ log.total_mileage_ft }} ft</p>
+    </div>
+  </div>
+
+  <!-- Weather Info -->
+  <div class="card mb-4">
+    <div class="card-header fw-bold">Weather</div>
+    <div class="card-body">
+      <p><strong>Conditions:</strong> {{ log.ground_weather_summary }}</p>
+      <p><strong>Ground Wind Speed:</strong> {{ log.wind_speed }} mph</p>
+      <p><strong>Max Gust:</strong> {{ log.max_gust }} mph</p>
+      <p><strong>Temperature:</strong> {{ log.ground_temp_f }}</p>
+      <p><strong>Cloud Cover:</strong> {{ log.cloud_cover }}</p>
+      <p><strong>Visibility:</strong> {{ log.visibility_miles }}</p>
+      <p><strong>Humidity:</strong> {{ log.humidity_pct }}%</p>
+     
+    </div>
+  </div>
+
+  <!-- Notes -->
+  {% if log.notes %}
+  <div class="card mb-4">
+    <div class="card-header fw-bold">Notes</div>
+    <div class="card-body">
+      <p>{{ log.notes }}</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

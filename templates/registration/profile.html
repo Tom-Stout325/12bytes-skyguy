@@ -1,0 +1,26 @@
+{% extends "index.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Your Profile</h4>
+                </div>
+                <div class="card-body">
+                    
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ p_form.as_p }}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">Update Profile</button>
+                    </div>
+                </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

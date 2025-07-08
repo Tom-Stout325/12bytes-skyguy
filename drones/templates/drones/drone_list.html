@@ -1,0 +1,66 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'drone_portal' %}">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Drones</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <h2 class="mb-3 text-center text-md-start">Drone Inventory</h2>
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+    <a href="{% url 'drone_create' %}" class="btn btn-primary mb-2">
+      <i class="fa-solid fa-plus"></i> Add Drone
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th>Nickname</th>
+          <th>Model</th>
+          <th>FAA Certificate</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for drone in drones %}
+        <tr>
+          <td>{{ drone.nickname }}</td>
+          <td>{{ drone.model }}</td>
+          <td>
+            {% if drone.faa_certificate %}
+              <a href="{{ drone.faa_certificate.url }}" target="_blank" class="text-decoration-none">
+                <i class="fa-solid fa-file-lines"></i> View
+              </a>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+              <a href="{% url 'drone_detail' drone.pk %}" class="text-info text-decoration-none" title="View">
+                <i class="fa-solid fa-eye fa-lg"></i>
+              </a>
+              <a href="{% url 'drone_edit' drone.pk %}" class="text-warning text-decoration-none" title="Edit">
+                <i class="fa-solid fa-pen-to-square fa-lg"></i>
+              </a>
+              <a href="{% url 'drone_delete' drone.pk %}" class="text-danger text-decoration-none" title="Delete">
+                <i class="fa-solid fa-trash fa-lg"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
