@@ -4,12 +4,12 @@ from .models import *
 
 
 class TransactionsForm(forms.ModelForm):
- 
+
     class Meta:
         model = Transaction
         fields = (
-            'date', 'trans_type', 'category', 'sub_cat', 'amount',
-            'invoice_numb', 'team', 'transaction',
+            'date', 'trans_type', 'sub_cat', 'amount',
+            'invoice_numb', 'transaction',
             'receipt', 'transport_type'
         )
         widgets = {
@@ -33,7 +33,19 @@ class TransactionsForm(forms.ModelForm):
             raise forms.ValidationError(
                 "Gas expenses are not deductible when using a personal vehicle. Use mileage instead."
             )
+
+        if not sub_cat:
+            raise forms.ValidationError("You must select a Sub-Category.")
+
         return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if instance.sub_cat:
+            instance.category = instance.sub_cat.category 
+        if commit:
+            instance.save()
+        return instance
 
 
 
@@ -50,12 +62,38 @@ class InvoiceForm(forms.ModelForm):
             'due': forms.DateInput(attrs={'type': 'date'}),
             'paid_date': forms.DateInput(attrs={'type': 'date'}),
         }
-        
+    
+
+class ServiceForm(forms.ModelForm):
+    class Meta:
+        model = Service
+        fields = ['service']
+        widgets = {
+            'service': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter service name'}),
+        }
+
+
 
 class InvoiceItemForm(forms.ModelForm):
     class Meta:
         model = InvoiceItem
-        fields = ['item', 'qty', 'price']
+        fields = ['description', 'qty', 'price']
+
+    description = forms.CharField(
+        label="Description",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Service or product description'})
+    )
+
+    qty = forms.IntegerField(
+        label="Qty",
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 1})
+    )
+
+    price = forms.DecimalField(
+        label="Price",
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+    )
+
 
 
 InvoiceItemFormSet = inlineformset_factory(
@@ -72,15 +110,18 @@ class CategoryForm(forms.ModelForm):
         model = Category
         fields = ['category']
 
+
 class SubCategoryForm(forms.ModelForm):
     class Meta:
         model = SubCategory
         fields = ['sub_cat']
 
+
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
         fields = ['business', 'first', 'last', 'street', 'address2', 'email', 'phone']
+
 
 class MileageForm(forms.ModelForm):
     class Meta:

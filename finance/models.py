@@ -5,6 +5,7 @@ from datetime import timedelta, date
 from decimal import Decimal
 from django.conf import settings
 from decimal import Decimal
+from django.utils.text import slugify
 try:
     from django.contrib.postgres.indexes import GinIndex
     from django.contrib.postgres.search import SearchVectorField
@@ -15,29 +16,35 @@ except ImportError:
 
 class Category(models.Model):
     category = models.CharField(max_length=500, blank=True, null=True)
-    
+
     class Meta:
-         verbose_name_plural = "Categories"
+        verbose_name_plural = "Categories"
 
     def __str__(self):
-        return self.category
+        return self.category or "Unnamed Category"
+
 
 
 class SubCategory(models.Model):
     sub_cat = models.CharField(max_length=500, blank=True, null=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories')
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+
 
     class Meta:
         verbose_name_plural = "Sub Categories"
- 
+        ordering = ['sub_cat']
+
     def __str__(self):
-        return self.sub_cat
+        return f"{self.category} - {self.sub_cat or 'Unnamed SubCategory'}"
+
+    def save(self, *args, **kwargs):
+        if not self.slug and self.sub_cat:
+            self.slug = slugify(self.sub_cat)
+        super().save(*args, **kwargs)
 
 
-class Team(models.Model):
-    name = models.CharField(max_length=50, blank=True, null=True)
-   
-    def __str__(self):
-        return self.name
+
 
 class Client(models.Model):
     business  = models.CharField(max_length=500, blank=True, null=True)
@@ -80,7 +87,6 @@ class Transaction(models.Model):
     sub_cat = models.ForeignKey('SubCategory', on_delete=models.PROTECT, null=True, blank=True)
     amount = models.DecimalField(max_digits=20, decimal_places=2)
     transaction = models.CharField(max_length=255)
-    team = models.ForeignKey('Team', null=True, blank=True, on_delete=models.PROTECT)
     tax = models.CharField(max_length=10, default="Yes")
     receipt = models.FileField(upload_to='receipts/', blank=True, null=True)
     account = models.CharField(max_length=255, blank=True, null=True)
@@ -160,18 +166,13 @@ class Invoice(models.Model):
 
 
 class InvoiceItem(models.Model):
-    invoice = models.ForeignKey('Invoice', on_delete=models.CASCADE, related_name='items')
-    item = models.ForeignKey(Service, on_delete=models.PROTECT, blank=True, null=True)
-    qty = models.IntegerField(default=0, blank=True, null=True)
-    price = models.DecimalField(max_digits=20, decimal_places=2, default=0.00, blank=True, null=True)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='items')
+    description = models.CharField(max_length=255)
+    qty = models.PositiveIntegerField(default=1)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"{self.item.service if self.item else 'No Item'} - {self.qty} x {self.price}"
-
-    @property
-    def total(self):
-        return (self.qty or 0) * (self.price or 0)
-
+        return self.description
 
 
 

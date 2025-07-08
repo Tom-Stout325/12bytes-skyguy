@@ -15,11 +15,15 @@
       {{ form.media }}
       {{ form.date|as_crispy_field }}
       {{ form.trans_type|as_crispy_field }}
-      {{ form.category|as_crispy_field }}
       {{ form.sub_cat|as_crispy_field }}
+      {% if selected_category %}
+        <div class="mb-3">
+          <label><strong>Auto-Assigned Category:</strong></label>
+          <p>{{ selected_category }}</p>
+        </div>
+      {% endif %}
       {{ form.amount|as_crispy_field }}
       {{ form.invoice_numb|as_crispy_field }}
-      {{ form.team|as_crispy_field }}
       {{ form.transaction|as_crispy_field }}
       {{ form.transport_type|as_crispy_field }}
 

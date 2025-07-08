@@ -13,6 +13,9 @@
       <dl class="row">
         <dt class="col-sm-4 col-md-3 fw-bold">Date</dt>
         <dd class="col-sm-8 col-md-9 text-muted">{{ transaction.date }}</dd>
+        
+        <dt class="col-sm-4 col-md-3 fw-bold">Type</dt>
+        <dd class="col-sm-8 col-md-9">{{ transaction.get_trans_type_display }}</dd>
 
         <dt class="col-sm-4 col-md-3 fw-bold">Description</dt>
         <dd class="col-sm-8 col-md-9">{{ transaction.transaction }}</dd>
@@ -21,41 +24,33 @@
         <dd class="col-sm-8 col-md-9 text-success fw-semibold">${{ transaction.amount|floatformat:2|intcomma }}</dd>
 
         {% if transaction.sub_cat.id == 26 %}
-        <dt class="col-sm-4 col-md-3 fw-bold">Deductible Amount</dt>
-        <dd class="col-sm-8 col-md-9 text-info">${{ transaction.deductible_amount|floatformat:2|intcomma }} <small class="text-muted">(Meals 50%)</small></dd>
+          <dt class="col-sm-4 col-md-3 fw-bold">Deductible Amount</dt>
+          <dd class="col-sm-8 col-md-9 text-info">${{ transaction.deductible_amount|floatformat:2|intcomma }} <small class="text-muted">(Meals 50%)</small></dd>
         {% endif %}
-
-        <dt class="col-sm-4 col-md-3 fw-bold">Type</dt>
-        <dd class="col-sm-8 col-md-9">{{ transaction.trans_type.trans_type }}</dd>
 
         <dt class="col-sm-4 col-md-3 fw-bold">Category</dt>
         <dd class="col-sm-8 col-md-9">{{ transaction.category.category }}</dd>
 
         {% if transaction.sub_cat %}
-        <dt class="col-sm-4 col-md-3 fw-bold">Subcategory</dt>
-        <dd class="col-sm-8 col-md-9">{{ transaction.sub_cat.sub_cat }}</dd>
+          <dt class="col-sm-4 col-md-3 fw-bold">Subcategory</dt>
+          <dd class="col-sm-8 col-md-9">{{ transaction.sub_cat.sub_cat }}</dd>
         {% endif %}
 
         {% if transaction.invoice_numb %}
-        <dt class="col-sm-4 col-md-3 fw-bold">Invoice #</dt>
-        <dd class="col-sm-8 col-md-9">{{ transaction.invoice_numb }}</dd>
-        {% endif %}
-
-        {% if transaction.team %}
-        <dt class="col-sm-4 col-md-3 fw-bold">Team</dt>
-        <dd class="col-sm-8 col-md-9">{{ transaction.team }}</dd>
+          <dt class="col-sm-4 col-md-3 fw-bold">Invoice #</dt>
+          <dd class="col-sm-8 col-md-9">{{ transaction.invoice_numb }}</dd>
         {% endif %}
 
         {% if transaction.transport_type %}
-        <dt class="col-sm-4 col-md-3 fw-bold">Transport Type</dt>
-        <dd class="col-sm-8 col-md-9">
-          {{ transaction.get_transport_type_display }}
-          {% if transaction.transport_type == 'personal_vehicle' %}
-            <small class="text-muted">(Mileage only)</small>
-          {% elif transaction.transport_type == 'rental_car' %}
-            <small class="text-muted">(Actual expenses)</small>
-          {% endif %}
-        </dd>
+          <dt class="col-sm-4 col-md-3 fw-bold">Transport Type</dt>
+            <dd class="col-sm-8 col-md-9">
+              {{ transaction.get_transport_type_display }}
+                {% if transaction.transport_type == 'personal_vehicle' %}
+                  <small class="text-muted">(Mileage only)</small>
+                {% elif transaction.transport_type == 'rental_car' %}
+                  <small class="text-muted">(Actual expenses)</small>
+                {% endif %}
+            </dd>
         {% endif %}
 
         {% if transaction.receipt %}

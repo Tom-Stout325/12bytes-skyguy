@@ -57,4 +57,9 @@ urlpatterns = [
     path('mileage/<int:pk>/delete/', MileageDeleteView.as_view(), name='mileage_delete'),
     path('mileage/update-rate/', update_mileage_rate, name='update_mileage_rate'),
       
+    # Services
+    path('services/', service_list, name='service_list'),
+    path('services/add/', service_create, name='service_create'),
+    path('services/<int:pk>/edit/', service_update, name='service_update'),
+    path('services/<int:pk>/delete/', service_delete, name='service_delete'),
 ]

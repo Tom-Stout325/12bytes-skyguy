@@ -12,6 +12,8 @@ from django.db.models.functions import ExtractYear
 from django.template.loader import get_template
 from django.urls import reverse_lazy, reverse
 from django.core.paginator import Paginator
+from calendar import monthrange, month_name
+from decimal import Decimal, ROUND_HALF_UP
 from django.core.mail import EmailMessage
 from django.utils.timezone import now
 from django.contrib import messages
@@ -20,7 +22,6 @@ from datetime import datetime, date
 from django.db import transaction
 from django.utils import timezone
 from django.conf import settings
-from calendar import monthrange, month_name
 from django.views import View
 from weasyprint import HTML
 from pathlib import Path
@@ -30,6 +31,7 @@ import csv
 import os
 from .models import *
 from .forms import *
+
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +54,7 @@ class Transactions(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Transaction.objects.select_related(
-            'category', 'sub_cat', 'team',
+            'category', 'sub_cat',
         ).filter(user=self.request.user)
 
         category_id = self.request.GET.get('category')
@@ -162,7 +164,19 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['current_page'] = 'transactions'
+
+        form = context.get('form')
+        sub_cat_id = self.request.POST.get('sub_cat') or self.request.GET.get('sub_cat')
+        if sub_cat_id:
+            from finance.models import SubCategory
+            try:
+                selected_category = SubCategory.objects.get(pk=sub_cat_id).category
+                context['selected_category'] = selected_category
+            except SubCategory.DoesNotExist:
+                context['selected_category'] = None
+
         return context
+
 
 
 class TransactionUpdateView(LoginRequiredMixin, UpdateView):
@@ -188,7 +202,13 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['current_page'] = 'transactions'
+
+        sub_cat = self.object.sub_cat
+        if sub_cat:
+            context['selected_category'] = sub_cat.category
+
         return context
+
 
 
 class TransactionDeleteView(LoginRequiredMixin, DeleteView):
@@ -231,6 +251,7 @@ class TransactionDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['current_page'] = 'transactions'
         return context
+
 
 @login_required
 def add_transaction_success(request):
@@ -395,48 +416,56 @@ class InvoiceDeleteView(LoginRequiredMixin, DeleteView):
         context['current_page'] = 'invoices'
         return context
     
-    
+
 @login_required
 def invoice_review(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
-    transactions = Transaction.objects.filter(invoice_numb=invoice.invoice_numb).select_related('sub_cat', 'category')
+
+    transactions = Transaction.objects.filter(
+        invoice_numb=invoice.invoice_numb
+    ).select_related('sub_cat', 'category')
+
     mileage_entries = Miles.objects.filter(
         invoice=invoice.invoice_numb,
         user=request.user,
         tax__iexact="Yes",
         mileage_type="Taxable"
     )
-
     try:
-        rate = MileageRate.objects.first().rate if MileageRate.objects.exists() else 0.70
+        rate = MileageRate.objects.first().rate if MileageRate.objects.exists() else Decimal('0.70')
+        rate = Decimal(str(rate))
     except Exception as e:
         logger.error(f"Error fetching mileage rate: {e}")
-        rate = 0.70
+        rate = Decimal('0.70')
 
-    total_mileage_miles = mileage_entries.aggregate(Sum('total'))['total__sum'] or 0
-    mileage_dollars = round(total_mileage_miles * rate, 2)
+    total_miles = mileage_entries.aggregate(Sum('total'))['total__sum'] or 0
+    total_miles = Decimal(str(total_miles))
+    mileage_dollars = (total_miles * rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
-    total_expenses = 0
-    deductible_expenses = 0
-    total_income = 0
+    total_income = Decimal('0.00')
+    total_expenses = Decimal('0.00')
+    deductible_expenses = Decimal('0.00')
 
     for t in transactions:
+        amount = Decimal(str(t.amount))
+
         if t.trans_type == 'Income':
-            total_income += t.amount
+            total_income += amount
         elif t.trans_type == 'Expense':
-            total_expenses += t.amount
-            is_meal = t.sub_cat and t.sub_cat.id == 26
-            is_gas = t.sub_cat and t.sub_cat.id == 27
+            total_expenses += amount
+            is_meal = t.sub_cat and t.sub_cat.slug == 'meals'
+            is_gas = t.sub_cat and t.sub_cat.slug == 'fuel'
             is_personal_vehicle = t.transport_type == 'personal_vehicle'
 
             if is_meal:
-                deductible_expenses += t.deductible_amount
+                deductible_expenses += Decimal(str(t.deductible_amount))
             elif is_gas and is_personal_vehicle:
                 continue
             else:
-                deductible_expenses += t.amount
+                deductible_expenses += amount
         else:
-            deductible_expenses += t.amount
+            deductible_expenses += amount
+
     net_income = total_income - total_expenses
     taxable_income = total_income - deductible_expenses - mileage_dollars
 
@@ -452,8 +481,9 @@ def invoice_review(request, pk):
         'net_income': net_income,
         'taxable_income': taxable_income,
         'invoice_amount': invoice.amount,
-        'current_page': 'invoices'
+        'current_page': 'invoices',
     }
+
     return render(request, 'finance/invoice_review.html', context)
 
 
@@ -807,6 +837,7 @@ class ClientDeleteView(LoginRequiredMixin, DeleteView):
 
 # --------------------------------------------------------------------------------------------------------------- Financial Reports
 
+
 def get_summary_data(request, year):
     current_year = timezone.now().year
 
@@ -823,14 +854,14 @@ def get_summary_data(request, year):
         messages.error(request, "Invalid year selected.")
         selected_year = current_year
 
-    transactions = Transaction.objects.filter(
+    expense_transactions = Transaction.objects.filter(
         user=request.user,
         date__year=selected_year,
         trans_type='Expense'
     ).select_related('sub_cat')
 
     expense_totals = {}
-    for t in transactions:
+    for t in expense_transactions:
         name = t.sub_cat.sub_cat if t.sub_cat else "Uncategorized"
 
         if t.sub_cat_id == 27 and t.transport_type == "personal_vehicle":
@@ -851,15 +882,24 @@ def get_summary_data(request, year):
         user=request.user,
         date__year=selected_year,
         trans_type='Income'
-    ).select_related('sub_cat')
+    ).select_related('sub_cat', 'category')
 
     income_subcategory_totals = income_qs.values('sub_cat__sub_cat') \
         .annotate(total=Sum('amount')).order_by('sub_cat__sub_cat')
 
-    income_category_total = income_qs.aggregate(total=Sum('amount'))['total'] or 0
-    expense_category_total = sum(t['total'] for t in expense_subcategory_totals)
-    net_profit = income_category_total - expense_category_total
+    income_category_totals = income_qs.values('category__category') \
+        .annotate(total=Sum('amount')).order_by('category__category')
 
+    expense_category_totals = Transaction.objects.filter(
+        user=request.user,
+        date__year=selected_year,
+        trans_type='Expense'
+    ).values('category__category') \
+     .annotate(total=Sum('amount')).order_by('category__category')
+
+    income_category_total = income_qs.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    expense_category_total = sum(t.get('total', Decimal('0.00')) for t in expense_subcategory_totals)
+    net_profit = income_category_total - expense_category_total
     available_years = Transaction.objects.filter(user=request.user).dates('date', 'year', order='DESC')
     available_years = [d.year for d in available_years]
 
@@ -867,11 +907,15 @@ def get_summary_data(request, year):
         'selected_year': selected_year,
         'income_subcategory_totals': income_subcategory_totals,
         'expense_subcategory_totals': expense_subcategory_totals,
+        'income_category_totals': income_category_totals,
+        'expense_category_totals': expense_category_totals,
         'income_category_total': income_category_total,
         'expense_category_total': expense_category_total,
+        'expense_subcategory_total': sum(t.get('total', Decimal('0.00')) for t in expense_subcategory_totals),
         'net_profit': net_profit,
         'available_years': available_years,
     }
+
 
 
 @login_required
@@ -1039,7 +1083,13 @@ def send_invoice_email(request, invoice_id):
 
 def get_mileage_context(request):
     try:
-        rate = MileageRate.objects.first().rate if MileageRate.objects.exists() else 0.70
+        rate = MileageRate.objects.first().rate if MileageRate.objects.exists() else Decimal('0.70')
+        rate = Decimal(str(rate))
+    except Exception as e:
+        logger.error(f"Error fetching mileage rate: {e}")
+        rate = Decimal('0.70')
+        messages.error(request, "Error fetching mileage rate. Using default rate.")
+
     except Exception as e:
         logger.error(f"Error fetching mileage rate: {e}")
         rate = 0.70
@@ -1057,7 +1107,7 @@ def get_mileage_context(request):
         'mileage_list': page_obj,
         'page_obj': page_obj,
         'total_miles': total_miles,
-        'taxable_dollars': total_miles * rate,
+        'taxable_dollars': Decimal(str(total_miles)) * rate,
         'current_year': year,
         'mileage_rate': rate,
         'current_page': 'mileage'
@@ -1140,3 +1190,45 @@ def update_mileage_rate(request):
     context = {'form': form, 'current_page': 'mileage'}
     return render(request, 'components/update_mileage_rate.html', context)
 
+
+# ---------------------------------------------------------------------------------------------------------------   Services
+
+
+@login_required
+def service_list(request):
+    services = Service.objects.all()
+    return render(request, 'finance/service_list.html', {'services': services})
+
+@login_required
+def service_create(request):
+    if request.method == 'POST':
+        form = ServiceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Service added successfully.")
+            return redirect('service_list')
+    else:
+        form = ServiceForm()
+    return render(request, 'finance/service_form.html', {'form': form, 'title': 'Add Service'})
+
+@login_required
+def service_update(request, pk):
+    service = get_object_or_404(Service, pk=pk)
+    if request.method == 'POST':
+        form = ServiceForm(request.POST, instance=service)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Service updated successfully.")
+            return redirect('service_list')
+    else:
+        form = ServiceForm(instance=service)
+    return render(request, 'finance/service_form.html', {'form': form, 'title': 'Edit Service'})
+
+@login_required
+def service_delete(request, pk):
+    service = get_object_or_404(Service, pk=pk)
+    if request.method == 'POST':
+        service.delete()
+        messages.success(request, "Service deleted.")
+        return redirect('service_list')
+    return render(request, 'finance/service_confirm_delete.html', {'service': service})

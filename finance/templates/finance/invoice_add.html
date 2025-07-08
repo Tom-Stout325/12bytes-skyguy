@@ -1,10 +1,12 @@
-{% extends 'index.html' %}
-{% load static %}
-{% load crispy_forms_tags %}
+{% extends 'index.html' %} 
+{% load static %} 
+{% load crispy_forms_tags %} 
 
-{% block content %}
+{%block content %}
 <div class="container mt-5">
-  <a href="{% url 'invoice_list' %}" class = "btn btn-outline btn-primary mb-4">Back To Invoices</a>
+  <a href="{% url 'invoice_list' %}" class="btn btn-outline-primary mb-4"
+    >← Back to Invoices</a>
+
   <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
       <h3 class="mb-0">Create Invoice</h3>
@@ -17,68 +19,93 @@
           <div class="col-md-6 mb-3">
             {{ form.invoice_numb|as_crispy_field }}
           </div>
-          <div class="col-md-6 mb-3">
-            {{ form.client|as_crispy_field }}
-          </div>
-          <div class="col-md-6 mb-3">
-            {{ form.event|as_crispy_field }}
-          </div>
-          <div class="col-md-6 mb-3">
-            {{ form.location|as_crispy_field }}
-          </div>
-          <div class="col-md-6 mb-3">
-            {{ form.service|as_crispy_field }}
-          </div>
-          <div class="col-md-6 mb-3">
-            {{ form.amount|as_crispy_field }}
-          </div>
-          <div class="col-md-6 mb-3">
-            {{ form.date|as_crispy_field }}
-          </div>
-          <div class="col-md-6 mb-3">
-            {{ form.due|as_crispy_field }}
-          </div>
-          <div class="col-md-6 mb-3">
-            {{ form.paid_date|as_crispy_field }}
-          </div>
-          <div class="col-md-6 mb-3">
-            {{ form.status|as_crispy_field }}
-          </div>
+          <div class="col-md-6 mb-3">{{ form.client|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.event|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.location|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.service|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.amount|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.date|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.due|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.paid_date|as_crispy_field }}</div>
+          <div class="col-md-6 mb-3">{{ form.status|as_crispy_field }}</div>
         </div>
 
-        <hr class="mt-4 mb-4">
+        <hr class="mt-4 mb-4" />
 
         <h5 class="mb-3">Invoice Items</h5>
         {{ formset.management_form }}
 
-        <div class="table-responsive">
-          <table class="table table-bordered table-hover align-middle">
+        <div class="table-responsive mb-4">
+          <table
+            class="table table-bordered table-hover align-middle"
+            id="invoice-items-table">
             <thead class="table-light">
               <tr>
-                <th>Item</th>
+                <th>Description</th>
                 <th>Qty</th>
                 <th>Price</th>
-                <th>Delete</th>
+                <th>Total</th>
+                <th class="text-center">Delete</th>
               </tr>
             </thead>
             <tbody>
               {% for form in formset %}
-              <tr>
-                <td>{{ form.item }}</td>
+              <tr class="invoice-item-row">
+                <td>{{ form.description }}</td>
                 <td>{{ form.qty }}</td>
                 <td>{{ form.price }}</td>
+                <td class="row-total">
+                  $<span class="total-value">0.00</span>
+                </td>
                 <td class="text-center">{{ form.DELETE }}</td>
               </tr>
               {% endfor %}
             </tbody>
+            <tfoot>
+              <tr class="table-light">
+                <td colspan="3" class="text-end fw-bold">Grand Total:</td>
+                <td colspan="2" class="fw-bold">
+                  $<span id="grand-total">0.00</span>
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
-
         <div class="text-end">
-          <button type="submit" class="btn btn-success">Save Invoice</button>
+          <button type="submit" class="btn btn-success">💾 Save Invoice</button>
         </div>
       </form>
     </div>
   </div>
 </div>
+
+<script>
+  function calculateTotals() {
+    let grandTotal = 0;
+
+    document.querySelectorAll(".invoice-item-row").forEach(row => {
+      const qtyInput = row.querySelector('input[name$="-qty"]');
+      const priceInput = row.querySelector('input[name$="-price"]');
+      const rowTotalEl = row.querySelector(".total-value");
+
+      const qty = parseFloat(qtyInput?.value) || 0;
+      const price = parseFloat(priceInput?.value) || 0;
+      const total = qty * price;
+
+      rowTotalEl.textContent = total.toFixed(2);
+      grandTotal += total;
+    });
+
+    document.getElementById("grand-total").textContent = grandTotal.toFixed(2);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    calculateTotals();
+
+    document.querySelectorAll('input[name$="-qty"], input[name$="-price"]').forEach(input => {
+      input.addEventListener("input", calculateTotals);
+    });
+  });
+</script>
+
 {% endblock %}

@@ -76,7 +76,7 @@
                 <th>Date</th>
                 <th>Category</th>
                 <th>Sub-Category</th>
-                <th>Amount</th>
+                <th>Amount <span class="text-small, text-muted">(Actual)</span></th>
                 <th>Deductible</th>
                 <th class="text-center">Actions</th>
               </tr>
@@ -95,9 +95,9 @@
                 </td>
                 <td>
                   {% if transaction.trans_type == 'Expense' %}
-                    {% if transaction.sub_cat.id == 26 %}
+                    {% if transaction.sub_cat.slug == 'meals' %}
                       <span class="badge bg-warning text-dark" title="50% deductible">50%</span>
-                    {% elif transaction.sub_cat.id == 27 and transaction.transport_type == 'personal_vehicle' %}
+                    {% elif transaction.sub_cat.slug == 'fuel' and transaction.transport_type == 'personal_vehicle' %}
                       <span class="badge bg-danger" title="Not deductible with personal vehicle">No</span>
                     {% else %}
                       <span class="badge bg-success" title="Fully deductible">Yes</span>

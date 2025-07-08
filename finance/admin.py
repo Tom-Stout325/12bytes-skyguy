@@ -13,9 +13,6 @@ class GroupAdmin(admin.ModelAdmin):
     list_display    = ['name', 'date']
     
 
-class TeamAdmin(admin.ModelAdmin):
-    list_display    = ['name', 'id']
-    
     
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
@@ -28,18 +25,19 @@ class InvoiceAdmin(admin.ModelAdmin):
 
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['category', 'id']
-
+    ordering = ['category']
 
 class SubCategoryAdmin(admin.ModelAdmin):
-    list_display = ['sub_cat', 'id']
-    
+    list_display = ['id', 'sub_cat', 'category', 'slug']
+    readonly_fields = ['slug']
+
 
 
 admin.site.register(InvoiceItem)
 admin.site.register(MileageRate)
 admin.site.register(Client)
 admin.site.register(Service)
-admin.site.register(Category,)
-admin.site.register(SubCategory)
+admin.site.register(Category, CategoryAdmin)
+admin.site.register(SubCategory, SubCategoryAdmin)
 admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(Miles)

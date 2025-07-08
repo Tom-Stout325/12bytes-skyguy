@@ -1,7 +1,7 @@
 {% extends 'index.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
-
+{% load finance_filters %}
 
 {% block breadcrumbs %}
   <h3>Finance Portal</h3>
@@ -59,7 +59,7 @@
           <table class="table table-bordered table-hover align-middle">
             <thead class="table-light">
               <tr>
-                <th>Item</th>
+                <th>Description</th>
                 <th>Qty</th>
                 <th>Price</th>
                 <th>Delete</th>
@@ -71,7 +71,7 @@
                   {{ hidden }}
                 {% endfor %}
                 <tr>
-                  <td>{{ item_form.item|as_crispy_field }}</td>
+                  <td>{{ item_form.description|as_crispy_field }}</td>
                   <td>{{ item_form.qty|as_crispy_field }}</td>
                   <td>{{ item_form.price|as_crispy_field }}</td>
                   <td class="text-center">{{ item_form.DELETE }}</td>

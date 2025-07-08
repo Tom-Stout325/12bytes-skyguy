@@ -8,7 +8,6 @@ from .models import Invoice
 def update_search_vector(sender, instance, **kwargs):
     from django.db.models.signals import post_save
 
-    # Disconnect to avoid infinite loop
     post_save.disconnect(update_search_vector, sender=Invoice)
 
     try:
