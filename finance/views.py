@@ -90,7 +90,7 @@ class Transactions(LoginRequiredMixin, ListView):
         context['categories'] = Category.objects.filter(transaction__isnull=False, transaction__user=self.request.user).distinct().order_by('category')
         context['subcategories'] = SubCategory.objects.filter(transaction__isnull=False, transaction__user=self.request.user).distinct().order_by('sub_cat')
         context['years'] = [str(y) for y in Transaction.objects.filter(user=self.request.user).annotate(
-            extracted_year=ExtractYear('date')).values_list('extracted_year', flat=True).distinct().order_by('-extracted_year') if y]
+        extracted_year=ExtractYear('date')).values_list('extracted_year', flat=True).distinct().order_by('-extracted_year') if y]
         context['selected_category'] = self.request.GET.get('category', '')
         context['selected_sub_cat'] = self.request.GET.get('sub_cat', '')
         context['selected_year'] = self.request.GET.get('year', '')
@@ -98,49 +98,66 @@ class Transactions(LoginRequiredMixin, ListView):
         return context
 
 
+
+class Echo:
+    def write(self, value):
+        return value
+
 class DownloadTransactionsCSV(LoginRequiredMixin, View):
     def get(self, request):
-        if request.GET.get('all') == 'true':
-            queryset = Transaction.objects.filter(user=request.user).select_related('trans_type')
-        else:
-            transactions_view = Transactions()
-            transactions_view.request = request
-            queryset = transactions_view.get_queryset()
-
-        year = request.GET.get('year')
-        if year and year.isdigit():
-            queryset = queryset.filter(date__year=int(year))
-
-        class Echo:
-            def write(self, value):
-                return value
-
-        def stream_csv(queryset):
-            writer = csv.writer(Echo())
-            yield writer.writerow(['Date', 'Type', 'Transaction', 'Location', 'Amount', 'Invoice #'])
-            for tx in queryset.iterator():
-                yield writer.writerow([
-                    tx.date,
-                    tx.trans_type.trans_type if tx.trans_type else '',
-                    tx.transaction,
-                    tx.amount,
-                    tx.invoice_numb if tx.invoice_numb else ''
-                ])
-
         try:
+            # Get base queryset
+            if request.GET.get('all') == 'true':
+                queryset = Transaction.objects.filter(user=request.user)
+            else:
+                transactions_view = Transactions()
+                transactions_view.request = request
+                queryset = transactions_view.get_queryset()
+
+            # Filter by year
+            year = request.GET.get('year')
+            if year and year.isdigit():
+                queryset = queryset.filter(date__year=int(year))
+
+            # Debug check
+            if not queryset.exists():
+                logger.warning(f"No transactions found for user {request.user} in export.")
+                return HttpResponse("No transactions to export.", status=204)
+
+            print("Transaction count:", queryset.count())
+            logger.info(f"Transaction count for {request.user}: {queryset.count()}")
+
+            # CSV generator
+            def stream_csv(queryset):
+                pseudo_buffer = Echo()
+                writer = csv.writer(pseudo_buffer)
+                yield writer.writerow(['Date', 'Type', 'Transaction', 'Location', 'Amount', 'Invoice #'])
+                for tx in queryset.iterator():
+                    yield writer.writerow([
+                        tx.date,
+                        tx.trans_type or '',
+                        tx.transaction,
+                        tx.amount,
+                        tx.invoice_numb or ''
+                    ])
+
+            # Determine filename
             if request.GET.get('all') == 'true':
                 filename = "all_transactions.csv"
             elif year and year.isdigit():
                 filename = f"transactions_{year}.csv"
             else:
                 filename = "transactions.csv"
-                
+
+            # Return streaming response
             response = StreamingHttpResponse(stream_csv(queryset), content_type='text/csv')
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
+
         except Exception as e:
             logger.error(f"Error generating CSV for user {request.user.id}: {e}")
             return HttpResponse("Error generating CSV", status=500)
+
 
 
 class TransactionCreateView(LoginRequiredMixin, CreateView):
