@@ -8,7 +8,7 @@ register = template.Library()
 @register.simple_tag
 def inline_logo():
     # Replace this path with your actual image path in your media folder or static
-    logo_path = settings.BASE_DIR / 'static' / 'images' / 'logo.png'
+    logo_path = settings.BASE_DIR / 'static' / 'images' / 'logo3.png'
     
     try:
         with open(logo_path, 'rb') as image_file:

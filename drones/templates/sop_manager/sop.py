@@ -6,7 +6,7 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 doc = Document()
 
 # Title Page with branding
-doc.add_picture("/mnt/data/AI Logo.png", width=Inches(2))
+doc.add_picture("/mnt/data/AI Logo3.png", width=Inches(2))
 title = doc.add_heading("Standard Operating Procedures (SOP)", 0)
 title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 contact_info = doc.add_paragraph("Sky Guy\nAnthony Stout\nwww.airborne-images.net\n317-557-9808\nskyguyllc@gmail.com")
