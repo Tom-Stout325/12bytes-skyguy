@@ -62,4 +62,9 @@ urlpatterns = [
     path('services/add/', service_create, name='service_create'),
     path('services/<int:pk>/edit/', service_update, name='service_update'),
     path('services/<int:pk>/delete/', service_delete, name='service_delete'),
+    
+    # Helpers
+    path('transactions/help/', help_transactions, name='help_transactions'),
+    path('invoice/help/', help_invoice_form, name='help_invoice_form'),
+
 ]

@@ -276,6 +276,11 @@ def add_transaction_success(request):
     return render(request, 'finance/transaction_add_success.html', context)
 
 
+
+@login_required
+def help_transactions(request):
+    return render(request, 'components/help_transactions.html', {'current_page': 'help'})
+
 # ---------------------------------------------------------------------------------------------------------------  Invoices
 
 
@@ -649,6 +654,11 @@ def export_invoices_pdf(request):
         messages.error(request, "Error generating PDF.")
         return redirect('invoice_list')
     
+
+@login_required
+def help_invoice_form(request):
+    return render(request, 'components/help_invoice_form.html', {'current_page': 'help'})
+
 
 # ---------------------------------------------------------------------------------------------------------------  Categories
 

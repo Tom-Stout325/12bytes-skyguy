@@ -9,7 +9,10 @@
 
   <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
-      <h3 class="mb-0">Create Invoice</h3>
+      <h3 class="mb-0 text-center">Create Invoice
+        <a href="{% url 'help_invoice_form' %}" class="btn btn-sm btn-outline-info float-end">Help?</a>
+
+      </h3>
     </div>
     <div class="card-body">
       <form method="post" novalidate>
