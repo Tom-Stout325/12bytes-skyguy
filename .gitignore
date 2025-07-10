@@ -25,17 +25,24 @@ ENV/
 *.pot
 *.pyc
 db.sqlite3
-media/
-staticfiles/
 local_settings.py
+
+# Media and static (exclude media uploads, allow collected static for production)
+media/
+# Ignore collected staticfiles ONLY in local dev (Heroku uses collectstatic)
+# Uncomment if you want to keep staticfiles tracked locally
+# staticfiles/
 
 # Environment variables
 .env
 .env.*
 
-# Migrations
-**/migrations/*.py
-!**/migrations/__init__.py
+# Migrations — track all except compiled or temporary
+# Allows real migration files into version control
+# You may adjust this if you want to exclude migration history
+# but it's safer to track them
+# DO NOT ignore real migration files
+# (this block intentionally removed)
 
 # VS Code
 .vscode/
@@ -71,8 +78,5 @@ dist/
 *.swp
 *.swo
 
-# System logs
-*.log
-
-# Mac file locking
+# Lock files
 *.lock
