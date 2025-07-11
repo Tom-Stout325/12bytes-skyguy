@@ -114,10 +114,12 @@ def training_delete(request, pk):
 def app_password_help(request):
     return render(request, 'app/app_password_help.html')
 
+
 def download_app_password_help_pdf(request):
-    html_string = render_to_string('app_password_help.html')
+    html_string = render_to_string('app/app_password_help_pdf.html')
     html = HTML(string=html_string, base_url=request.build_absolute_uri())
     pdf = html.write_pdf()
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="Gmail_App_Password_Guide.pdf"'
     return response
+
