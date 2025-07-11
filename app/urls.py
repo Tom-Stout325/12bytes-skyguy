@@ -11,11 +11,9 @@ urlpatterns = [
     path('', login_required(TemplateView.as_view(template_name='app/home.html')), name='home'),
     path('drone-portal/', drone_views.drone_portal, name='drone_portal'),
     path('profile/', profile, name='profile'),
-    path('profile/edit/', edit_profile, name='edit_profile'),
     path('training/add/', training_create, name='training_create'),
     path('training/<int:pk>/edit/', training_edit, name='training_edit'),
     path('training/<int:pk>/delete/', training_delete, name='training_delete'),
-
 
     path('register/', register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),

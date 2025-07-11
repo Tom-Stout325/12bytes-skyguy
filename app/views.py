@@ -37,27 +37,23 @@ def profile(request):
 
     training_years = profile.trainings.dates('date_completed', 'year', order='DESC')
 
-    context = {
-        'profile': profile,
-        'trainings': trainings,
-        'years': [y.year for y in training_years],
-        'current_page': 'profile' 
-    }
-    return render(request, 'app/profile.html', context)
-
-
-@login_required
-def edit_profile(request):
-    profile = get_object_or_404(PilotProfile, user=request.user)
     if request.method == 'POST':
         form = PilotProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
+            messages.success(request, "Profile updated successfully.")
             return redirect('profile')
     else:
         form = PilotProfileForm(instance=profile)
-    context = {'form': form, 'current_page': 'profile'}  
-    return render(request, 'app/edit_profile.html', context)
+
+    context = {
+        'profile': profile,
+        'form': form,
+        'trainings': trainings,
+        'years': [y.year for y in training_years],
+        'current_page': 'profile'
+    }
+    return render(request, 'app/profile.html', context)
 
 
 @login_required

@@ -30,9 +30,12 @@
     </style>
 
     {% block extra_head %}{% endblock %}
+
+    {{ form.media }}
+
   </head>
 
-  <body>
+  <body class="d-flex flex-column min-vh-100">
     {% include 'navbar.html' %}
     <!-- Messages -->
     <div class="container">
@@ -46,7 +49,9 @@
       {% endif %}
     </div>
 
-    <main class="container mb-5">{% block content %} {% endblock %}</main>
+    <main class="flex-grow-1">
+    {% block content %}{% endblock %}
+  </main>
 
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-3 fixed-bottom">
